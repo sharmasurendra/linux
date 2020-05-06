@@ -1056,7 +1056,8 @@ int kvm_emulate_cpuid(struct kvm_vcpu *vcpu)
 		printk("ax> reason_for_exit : ALL , count_of_exit : %u\n",eax); 
 	}else if(eax  ==  0x4ffffffe){
         ebx = ( (atomic64_read(&exits_time) >> 32) );
-		ecx = ( (atomic64_read(&exits_time) & 0xFFFFFFFF ));	    
+		ecx = ( (atomic64_read(&exits_time) & 0xFFFFFFFF ));	
+		printk(“ax> total exit time taken : %u\n”,ecx);    
     }else if(eax  ==  0x4ffffffd){
         if(ecx >= 0 && ecx < 62)	    
             eax = atomic_read(&exits_per_reason[(int)ecx]);
@@ -1065,6 +1066,7 @@ int kvm_emulate_cpuid(struct kvm_vcpu *vcpu)
         if(ecx >= 0 && ecx < 62){        
             ebx = ( (atomic64_read(&exits_time_per_reason[(int)ecx]) >> 32) );
 		    ecx = ( (atomic64_read(&exits_time_per_reason[(int)ecx]) & 0xFFFFFFFF ));
+		    printk(“ax> each exit time : %d , total exit time taken : %u\n”,(int)ecx,eax);
         }	    
     }else{
 	    kvm_cpuid(vcpu, &eax, &ebx, &ecx, &edx, true);
