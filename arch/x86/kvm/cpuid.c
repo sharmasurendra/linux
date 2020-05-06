@@ -1043,11 +1043,41 @@ int kvm_emulate_cpuid(struct kvm_vcpu *vcpu)
 
 	eax = kvm_rax_read(vcpu);
 	ecx = kvm_rcx_read(vcpu);
-	kvm_cpuid(vcpu, &eax, &ebx, &ecx, &edx, false);
+	
+	if(eax  ==  0x4fffffff){
+	    eax = atomic_read(&exits);
+	printk("ax> reason_for_exit : ALL , count_of_exit : %u\n",eax); 
+	}else if(eax  ==  0x4ffffffe){
+        ebx = ( (atomic64_read(&exits_time) >> 32) );
+		ecx = ( (atomic64_read(&exits_time) & 0xFFFFFFFF ));	    
+    }else if(eax  ==  0x4ffffffd){
+        if(ecx >= 0 && ecx < 62)	    
+            eax = atomic_read(&exits_per_reason[(int)ecx]);
+	    printk("ax> reason_for_exit : %d , count_of_exit : %u\n",(int)ecx,eax);
+	}else if(eax  ==  0x4ffffffc){
+        if(ecx >= 0 && ecx < 62){        
+            ebx = ( (atomic64_read(&exits_time_per_reason[(int)ecx]) >> 32) );
+		    ecx = ( (atomic64_read(&exits_time_per_reason[(int)ecx]) & 0xFFFFFFFF ));
+        }	    
+    }else{
+	    kvm_cpuid(vcpu, &eax, &ebx, &ecx, &edx, true);
+	}
+	
 	kvm_rax_write(vcpu, eax);
 	kvm_rbx_write(vcpu, ebx);
 	kvm_rcx_write(vcpu, ecx);
 	kvm_rdx_write(vcpu, edx);
 	return kvm_skip_emulated_instruction(vcpu);
 }
+
+void add_exit_time_per_reason(u32 exit_reason,u64 time_taken){
+    if(exit_reason >= 0 && exit_reason < 62){    
+        atomic64_add(time_taken,&exits_time);
+        atomic64_add(time_taken,&exits_time_per_reason[(int)exit_reason]);
+        atomic_inc(&exits);
+        atomic_inc(&exits_per_reason[(int)exit_reason]);
+    }
+}
+
 EXPORT_SYMBOL_GPL(kvm_emulate_cpuid);
+EXPORT_SYMBOL_GPL(add_exit_time_per_reason);
