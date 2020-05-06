@@ -1034,6 +1034,12 @@ bool kvm_cpuid(struct kvm_vcpu *vcpu, u32 *eax, u32 *ebx,
 }
 EXPORT_SYMBOL_GPL(kvm_cpuid);
 
+static atomic_t exits,exits_per_reason[62];
+
+static atomic64_t exits_time,exits_time_per_reason[62];
+
+void add_exit_time_per_reason(u32 exit_reason,u64 time_taken);
+
 int kvm_emulate_cpuid(struct kvm_vcpu *vcpu)
 {
 	u32 eax, ebx, ecx, edx;
