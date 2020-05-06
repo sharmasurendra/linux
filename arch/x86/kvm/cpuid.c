@@ -1052,14 +1052,15 @@ int kvm_emulate_cpuid(struct kvm_vcpu *vcpu)
 	
 	if(eax  ==  0x4fffffff){
 	    eax = atomic_read(&exits);
-	printk("ax> reason_for_exit : ALL , count_of_exit : %u\n",eax); 
+
+		printk("ax> reason_for_exit : ALL , count_of_exit : %u\n",eax); 
 	}else if(eax  ==  0x4ffffffe){
         ebx = ( (atomic64_read(&exits_time) >> 32) );
 		ecx = ( (atomic64_read(&exits_time) & 0xFFFFFFFF ));	    
     }else if(eax  ==  0x4ffffffd){
         if(ecx >= 0 && ecx < 62)	    
             eax = atomic_read(&exits_per_reason[(int)ecx]);
-	    printk("ax> reason_for_exit : %d , count_of_exit : %u\n",(int)ecx,eax);
+	    	printk("ax> reason_for_exit : %d , count_of_exit : %u\n",(int)ecx,eax);
 	}else if(eax  ==  0x4ffffffc){
         if(ecx >= 0 && ecx < 62){        
             ebx = ( (atomic64_read(&exits_time_per_reason[(int)ecx]) >> 32) );

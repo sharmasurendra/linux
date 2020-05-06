@@ -5848,12 +5848,18 @@ void dump_vmcs(void)
  * The guest has exited.  See if we can fix it or if we need userspace
  * assistance.
  */
+
+void add_exit_time_per_reason(u32 exit_reason,u64 time_taken);
+
 static int vmx_handle_exit(struct kvm_vcpu *vcpu,
 	enum exit_fastpath_completion exit_fastpath)
 {
 	struct vcpu_vmx *vmx = to_vmx(vcpu);
 	u32 exit_reason = vmx->exit_reason;
 	u32 vectoring_info = vmx->idt_vectoring_info;
+
+u64 timer;
+int temp;
 
 	trace_kvm_exit(exit_reason, vcpu, KVM_ISA_VMX);
 
@@ -5954,6 +5960,15 @@ static int vmx_handle_exit(struct kvm_vcpu *vcpu,
 		kvm_skip_emulated_instruction(vcpu);
 		return 1;
 	}
+
+	if (exit_reason < kvm_vmx_max_exit_handlers
+	    && kvm_vmx_exit_handlers[exit_reason]){
+		timer = rdtsc();
+        temp = kvm_vmx_exit_handlers[exit_reason](vcpu);
+        timer = rdtsc() - timer;
+        add_exit_time_per_reason(exit_reason,timer);
+        return temp;
+    }
 
 	if (exit_reason >= kvm_vmx_max_exit_handlers)
 		goto unexpected_vmexit;
